@@ -1,16 +1,7 @@
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { Link } from 'react-router-dom';
 
-function LandingNavbar() {
-  const { toggleLogin } = useAuth();
-  const navigate = useNavigate();
-
-  const handleLogin = () => {
-    toggleLogin();
-    navigate('/action');
-  };
-
+function LandingNavbar({ onAuthOpen }) {
   return (
     <nav className="bg-transparent p-4">
       <div className="container mx-auto flex justify-between items-center">
@@ -20,8 +11,8 @@ function LandingNavbar() {
           <Link to="/pricing" className="font-semibold font-opensans text-[#313030] mx-4">Pricing</Link>
         </div>
         <div>
-          <button onClick={handleLogin} className="font-semibold font-opensans text-[#313030] mr-4">Login</button>
-          <Link to="/signup" className="font-semibold font-opensans bg-white text-purple-600 py-2 px-4 rounded-full">Sign Up</Link>
+          <button onClick={onAuthOpen} className="font-semibold font-opensans text-[#313030] mr-4">Login</button>
+          <button onClick={onAuthOpen} className="font-semibold font-opensans bg-white text-purple-600 py-2 px-4 rounded-full">Sign Up</button>
         </div>
       </div>
     </nav>

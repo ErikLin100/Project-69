@@ -1,21 +1,28 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { signOut } from 'firebase/auth';
+import { auth } from '../firebase';
 
 const Navbar = () => {
-  const { toggleLogin } = useAuth();
+  const { logout } = useAuth();
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    toggleLogin();
-    navigate('/');
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      logout();
+      navigate('/');
+    } catch (error) {
+      console.error('Error logging out:', error);
+    }
   };
 
   return (
     <nav className="bg-transparent p-4">
       <div className="container mx-auto flex justify-between items-center">
         <Link to="/home" className="font-semibold font-opensans text-[#313030] text-xl">
-         "logo".AI
+          "logo".AI
         </Link>
         <div className="flex-grow flex justify-center">
           <Link to="/create" className="font-semibold font-opensans text-[#313030] mx-4">

@@ -1,94 +1,41 @@
 import React, { useState } from 'react';
+import ProjectList from '../components/ProjectList';
+import CreatePortalModal from '../components/CreatePortalModal';
 import { useNavigate } from 'react-router-dom';
-import FeedbackForm from '../components/FeedbackForm';
 
-const ActionPage = () => {
+function ActionPage() {
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const navigate = useNavigate();
-  const [step, setStep] = useState(0);
-  const [projectName, setProjectName] = useState('');
-  const [customQuestions, setCustomQuestions] = useState([]);
 
-  const handleCreateProject = () => {
-    setStep(1);
-  };
-
-  const handleProjectNameSubmit = () => {
-    setStep(2);
-  };
-
-  const handleAddCustomQuestion = (question) => {
-    setCustomQuestions([...customQuestions, question]);
-  };
-
-  const handleGenerateLink = () => {
-    const projectId = Date.now().toString(36) + Math.random().toString(36).substr(2);
-    const link = `${window.location.origin}/feedback/${projectId}`;
-    console.log('Link generated for project:', projectName, link);
-    navigate('/results', { state: { projectName, link } });
+  const handleProjectCreated = (projectId) => {
+    console.log("Navigating to project:", projectId);
+    setIsModalOpen(false);
+    navigate(`/project/${projectId}`);
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen">
-      {step === 0 && (
-        <>
-          <h1 className="text-4xl text-[#313030] font-bold mb-8">Create a New Feedback Project</h1>
-          <button
-            onClick={handleCreateProject}
-            className="px-6 py-3 bg-purple-600 text-white rounded-full hover:bg-purple-700 transition duration-300"
+    <div className="from-purple-50 to-purple-100 min-h-screen py-8 px-8 sm:px-16 md:px-24 lg:px-32">
+      <div className="container mx-auto">
+        <h1 className="text-4xl font-semibold font-opensans mb-8 text-center text-purple-800">Your Feedback Dashboard</h1>
+        <div className="mb-8">
+          <button 
+            onClick={() => setIsModalOpen(true)}
+            className="w-full px-4 py-2 text-white bg-purple-500 rounded-md hover:bg-purple-600 focus:outline-none focus:ring-2 focus:ring-purple-300 transition duration-300"
           >
-            Create New Project
+            Create New Portal
           </button>
-        </>
-      )}
-
-      {step === 1 && (
-        <>
-          <h2 className="text-3xl text-[#313030] font-bold mb-6">Name Your Project</h2>
-          <input
-            type="text"
-            value={projectName}
-            onChange={(e) => setProjectName(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-md mb-4 w-64"
-            placeholder="Enter project name"
-          />
-          <button
-            onClick={handleProjectNameSubmit}
-            className="px-6 py-3 bg-purple-600 text-white rounded-full hover:bg-purple-700 transition duration-300"
-          >
-            Next
-          </button>
-        </>
-      )}
-
-      {step === 2 && (
-        <>
-          <h2 className="text-3xl text-[#313030] font-bold mb-6">Customize Your Feedback Portal</h2>
-          <input
-            type="text"
-            placeholder="Add custom question"
-            onKeyPress={(e) => {
-              if (e.key === 'Enter') {
-                handleAddCustomQuestion(e.target.value);
-                e.target.value = '';
-              }
-            }}
-            className="px-4 py-2 border border-gray-300 rounded-md mb-4 w-64"
-          />
-          <FeedbackForm
-            projectName={projectName}
-            customQuestions={customQuestions}
-            isPreview={true}
-          />
-          <button
-            onClick={handleGenerateLink}
-            className="px-6 py-3 bg-purple-600 text-white rounded-full hover:bg-purple-700 transition duration-300 mt-4"
-          >
-            Generate Feedback Link
-          </button>
-        </>
-      )}
+        </div>
+        <div className="bg-white rounded-lg shadow-md p-6 border border-purple-200">
+          <ProjectList />
+        </div>
+      </div>
+      <CreatePortalModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)}
+        onProjectCreated={handleProjectCreated}
+      />
     </div>
   );
-};
+}
 
 export default ActionPage;
