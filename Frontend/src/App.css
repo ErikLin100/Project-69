@@ -53,9 +53,30 @@
 
 .animated-gradient {
   background-size: 200% 200%;
-  animation: gradientAnimation 5s ease infinite;
+  animation: gradientAnimation 2s ease infinite;
 }
 
 .text-glow {
   text-shadow: 0 0 20px rgba(255, 255, 255, 0.7);
 }
+.text-reveal {
+  background: linear-gradient(to right, white 50%, #313030 50%);
+  background-size: 200% 100%;
+  background-position: 100% 0;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  transition: all 0.5s ease-out;
+  text-decoration: none;
+  border-bottom: none;
+}
+
+
+
+.hero-section:hover .text-reveal {
+  background-position: 0 0;
+}
+
+.hero-section:hover .text-reveal::after {
+  width: 100%;
+}
+

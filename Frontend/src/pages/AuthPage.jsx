@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
-import { auth } from '../firebase';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { auth, db } from '../firebase';
 import { useAuth } from '../context/AuthContext';
+
 
 function AuthPage({ isOpen, onClose }) {
   const navigate = useNavigate();
@@ -12,7 +14,22 @@ function AuthPage({ isOpen, onClose }) {
   const handleGoogleSignIn = async () => {
     const provider = new GoogleAuthProvider();
     try {
-      await signInWithPopup(auth, provider);
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+  
+      // Create or update user document in Firestore
+      const userRef = doc(db, 'users', user.uid);
+      const userSnap = await getDoc(userRef);
+  
+      if (!userSnap.exists()) {
+        await setDoc(userRef, {
+          email: user.email,
+          analysisFrequency: 'weekly',
+          feedbackThreshold: 50,
+          createdAt: new Date()
+        });
+      }
+  
       login();
       onClose();
       navigate('/action');

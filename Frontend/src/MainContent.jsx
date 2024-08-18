@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import LandingPage from './pages/LandingPage';
 import ActionPage from './pages/ActionPage';
 import ProjectPage from './pages/ProjectPage';
@@ -12,13 +12,18 @@ import Navbar from './components/Navbar';
 function MainContent() {
   const { isLoggedIn } = useAuth();
   const [isAuthOpen, setIsAuthOpen] = useState(false);
+  const location = useLocation();
+
+  const isFeedbackPage = location.pathname.includes('/feedback/');
 
   return (
-    <div className="app">
-      {isLoggedIn ? (
-        <Navbar />
-      ) : (
-        <LandingNavbar onAuthOpen={() => setIsAuthOpen(true)} />
+    <div className={`app ${isLoggedIn ? 'gradient-background' : ''}`}>
+      {!isFeedbackPage && (
+        isLoggedIn ? (
+          <Navbar />
+        ) : (
+          <LandingNavbar onAuthOpen={() => setIsAuthOpen(true)} />
+        )
       )}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <Routes>
