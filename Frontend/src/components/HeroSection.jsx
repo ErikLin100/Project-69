@@ -29,7 +29,7 @@ function HeroSection() {
   }, [currentDemographic]);
 
   return (
-    <div className="mt-8 rounded-lg bg-main-gradient from-main-start to-main-end text-white py-20 px-8 sm:px-16 md:px-24 lg:px-32 animated-gradient overflow-hidden hero-section">
+    <div className="mt-8 rounded-lg bg-main-gradient from-purple-600 to-purple-400 text-white py-20 px-8 sm:px-16 md:px-24 lg:px-32 animated-gradient overflow-hidden hero-section">
       <div className="container mx-auto text-center flex flex-col items-center">
         <h1 className="leading-slightly-relaxed text-5xl font-semibold font-opensans mb-6 flex flex-wrap justify-center items-center">
           <span className="text-[#313030] ">Do you have a</span>
@@ -44,7 +44,7 @@ function HeroSection() {
           </span>
         </h2>
         <Link to="/signup" className="bg-[#F5F6F8] font-semibold font-opensans text-purple-600 py-3 px-8 rounded-full text-lg hover:bg-gray-100 transition duration-300">
-          Get Started Today
+          Start Your Free Trial
         </Link>
       </div>
     </div>

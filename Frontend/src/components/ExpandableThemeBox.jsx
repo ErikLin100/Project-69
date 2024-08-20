@@ -4,6 +4,8 @@ import MessageDisplay from './MessageDisplay';
 function ExpandableThemeBox({ theme, totalFeedback }) {
   const [isExpanded, setIsExpanded] = useState(false);
 
+  console.log('Theme data:', theme); // Debugging line
+
   return (
     <div className="rounded-lg p-4 hover:shadow-md transition-shadow overflow-hidden relative">
       <div className="bg-main-gradient from-main-start to-main-end absolute inset-0 animated-gradient"></div>

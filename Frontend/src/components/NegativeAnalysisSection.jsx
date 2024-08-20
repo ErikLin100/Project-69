@@ -1,5 +1,5 @@
 import React from 'react';
-import bigneg1 from '../assets/images/bigneg1.png';
+import bigneg1 from '../assets/images/newbigneg1.png';
 
 const NegativeAnalysisSection = () => {
   return (

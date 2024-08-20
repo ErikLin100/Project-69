@@ -3,6 +3,12 @@ import React, { useState } from 'react';
 const MessageDisplay = ({ messages }) => {
   const [expandedIndex, setExpandedIndex] = useState(null);
 
+  console.log('Received messages in MessageDisplay:', messages);
+
+  if (!messages || messages.length === 0) {
+    return <p className="text-white text-sm">No messages available for this theme.</p>;
+  }
+
   const toggleExpand = (index) => {
     setExpandedIndex(expandedIndex === index ? null : index);
   };

@@ -1,5 +1,5 @@
 import React from 'react';
-import bigtheme2 from '../assets/images/bigtheme2.png';
+import bigtheme2 from '../assets/images/newbigtheme1.png';
 
 const ThemeAnalysisSection = () => {
   return (
