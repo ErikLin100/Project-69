@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
+import { FaStar } from 'react-icons/fa';
 
-const MessageDisplay = ({ messages }) => {
+const MessageDisplay = ({ messages, textColor = "text-gray-800", accentColor = "text-gray-500" }) => {
   const [expandedIndex, setExpandedIndex] = useState(null);
 
   console.log('Received messages in MessageDisplay:', messages);
@@ -13,30 +14,64 @@ const MessageDisplay = ({ messages }) => {
     setExpandedIndex(expandedIndex === index ? null : index);
   };
 
+  const renderStars = (rating) => {
+    if (typeof rating !== 'number') return null;
+    
+    const stars = [];
+    const fullStars = Math.floor(rating);
+    const hasHalfStar = rating % 1 >= 0.5;
+
+    for (let i = 1; i <= 5; i++) {
+      if (i <= fullStars) {
+        stars.push(<FaStar key={i} className="text-yellow-400" />);
+      } else if (i === fullStars + 1 && hasHalfStar) {
+        stars.push(<FaStar key={i} className="text-yellow-400 opacity-50" />);
+      } else {
+        stars.push(<FaStar key={i} className="text-gray-300" />);
+      }
+    }
+
+    return stars;
+  };
+
+  const getMessageText = (messageObj) => {
+    if (typeof messageObj === 'string') return messageObj;
+    if (typeof messageObj.text === 'string') return messageObj.text;
+    if (typeof messageObj === 'object' && messageObj !== null) {
+      return messageObj.text || JSON.stringify(messageObj);
+    }
+    return 'Invalid message format';
+  };
+  
   return (
     <div className="mt-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        {messages.map((message, index) => (
-          <div key={index} className="bg-white bg-opacity-20 backdrop-blur-lg rounded-lg p-3 shadow-lg hover:shadow-xl transition-shadow duration-300 max-w-full">
-            <p className="text-white text-sm leading-relaxed break-words overflow-wrap-anywhere">
-              {expandedIndex === index || message.length <= 50
-                ? message
-                : `${message.slice(0, 50)}...`}
-            </p>
-            {message.length > 50 && (
-              <button
-                onClick={() => toggleExpand(index)}
-                className="text-xs text-gray-300 mt-2 hover:text-white"
-              >
-                {expandedIndex === index ? 'Show less' : 'Show more'}
-              </button>
-            )}
-            <div className="mt-2 flex justify-between items-center">
-              <span className="text-xs text-gray-300">Feedback #{index + 1}</span>
-              <span className="text-xs text-gray-300">⭐⭐⭐⭐⭐</span>
+        {messages.map((messageObj, index) => {
+          const messageText = getMessageText(messageObj);
+          return (
+            <div key={index} className={`bg-white bg-opacity-90 rounded-lg p-3 shadow-lg hover:shadow-xl transition-shadow duration-300 max-w-full`}>
+              <p className={`${textColor} text-sm leading-relaxed break-words overflow-wrap-anywhere`}>
+                {expandedIndex === index || messageText.length <= 50
+                  ? messageText
+                  : `${messageText.substring(0, 50)}...`}
+              </p>
+              {messageText.length > 50 && (
+                <button
+                  onClick={() => toggleExpand(index)}
+                  className={`text-xs ${accentColor} mt-2 hover:underline`}
+                >
+                  {expandedIndex === index ? 'Show less' : 'Show more'}
+                </button>
+              )}
+              <div className="mt-2 flex justify-between items-center">
+                <span className={`text-xs ${accentColor}`}>Feedback #{index + 1}</span>
+                <span className={`text-xs ${accentColor} flex`}>
+                  {renderStars(typeof messageObj === 'object' ? messageObj.rating : undefined)}
+                </span>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

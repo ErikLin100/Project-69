@@ -24,20 +24,31 @@ function ProjectDetails({ projectId }) {
   }
 
   return (
-    <div className="project-details">
-      <h3 className="text-2xl font-semibold font-opensans mb-4 text-purple-700">{project.name}</h3>
-      <div className="bg-purple-50 p-4 rounded-md shadow-sm border border-purple-100">
-        <p className="text-purple-800 mb-2">Created: {project.createdAt.toDate().toLocaleString()}</p>
-        <div className="mt-4">
-          <h4 className="text-lg font-semibold text-purple-700 mb-2">Feedback Link:</h4>
-          <input 
-            type="text" 
-            value={`https://yourapp.com/feedback/${project.id}`} 
-            readOnly 
-            className="w-full px-3 py-2 bg-white border border-purple-200 rounded-md text-purple-800 focus:outline-none focus:ring-2 focus:ring-purple-300"
-          />
+    <div className="project-list">
+      <h2 className="text-xl font-bold mb-4 text-purple-700">Your Projects</h2>
+      {projects.length === 0 ? (
+        <div className="bg-purple-50 p-4 rounded-md shadow-sm border border-purple-100">
+          <p className="text-purple-800 text-center">You don't have any active projects created.</p>
         </div>
-      </div>
+      ) : (
+        <ul className="space-y-2">
+          {projects.map((project) => (
+            <li
+              key={project.id}
+              className="bg-purple-50 p-4 rounded-md shadow-sm border border-purple-100 hover:bg-purple-100 transition duration-300 cursor-pointer flex justify-between items-center"
+              onClick={() => handleProjectClick(project.id)}
+            >
+              <span className="text-purple-800">{project.name}</span>
+              <button
+                className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600 transition duration-300"
+                onClick={(e) => handleDeleteProject(project.id, e)}
+              >
+                Delete
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }

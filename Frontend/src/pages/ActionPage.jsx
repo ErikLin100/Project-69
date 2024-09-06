@@ -1,41 +1,63 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import ProjectList from '../components/ProjectList';
 import CreatePortalModal from '../components/CreatePortalModal';
-import { useNavigate } from 'react-router-dom';
+import withSubscriptionCheck from '../components/withSubscriptionCheck';
+import { auth, db } from '../firebase';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 
 function ActionPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const navigate = useNavigate();
+  const [projects, setProjects] = useState([]);
+
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        const user = auth.currentUser;
+        console.log('Fetching projects for user:', user ? user.uid : 'No user');
+
+        const projectsRef = collection(db, 'projects');
+        const q = query(projectsRef, where('userId', '==', user.uid));
+        const querySnapshot = await getDocs(q);
+        console.log('Projects query snapshot size:', querySnapshot.size);
+
+        const fetchedProjects = querySnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        console.log('Fetched projects:', fetchedProjects);
+        setProjects(fetchedProjects);
+      } catch (error) {
+        console.error('Error fetching projects:', error);
+      }
+    };
+
+    fetchProjects();
+  }, []);
 
   const handleProjectCreated = (projectId) => {
     console.log("Navigating to project:", projectId);
-    setIsModalOpen(false);
     navigate(`/project/${projectId}`);
   };
 
   return (
     <div className="min-h-screen py-8 px-8 sm:px-16 md:px-24 lg:px-32">
-  <div className="container mx-auto">
-    <h1 className="text-4xl font-semibold font-opensans mb-8 text-center text-purple-800">Your Feedback Dashboard</h1>
-    <div className="mb-8">
+      <h1 className="text-3xl font-bold mb-8 text-purple-700">Dashboard</h1>
       <button
+        className="bg-purple-500 text-white px-4 py-2 rounded-md hover:bg-purple-600 transition duration-300 mb-8"
         onClick={() => setIsModalOpen(true)}
-        className="w-full px-4 py-2 text-white bg-purple-600 rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-300 transition duration-300"
       >
         Create New Project
       </button>
+      <ProjectList projects={projects} />
+      <CreatePortalModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onProjectCreated={handleProjectCreated}
+      />
     </div>
-    <div className="bg-white rounded-lg shadow-md p-6 border border-purple-200">
-      <ProjectList />
-    </div>
-  </div>
-  <CreatePortalModal
-    isOpen={isModalOpen}
-    onClose={() => setIsModalOpen(false)}
-    onProjectCreated={handleProjectCreated}
-  />
-</div>
   );
 }
 
-export default ActionPage;
+export default withSubscriptionCheck(ActionPage);

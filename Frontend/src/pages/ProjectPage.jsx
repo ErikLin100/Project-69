@@ -1,96 +1,199 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { doc, getDoc, collection, getDocs } from 'firebase/firestore';
+import { doc, getDoc, collection, getDocs, query, where, deleteDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import FeedbackAnalysis from '../components/FeedbackAnalysis';
 import FeedbackList from '../components/FeedbackList';
 import axios from 'axios';
+import { useAuth } from '../context/AuthContext';
+import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 
 function ProjectPage() {
   const { projectId } = useParams();
   const [project, setProject] = useState(null);
   const [analyses, setAnalyses] = useState([]);
   const [feedbacks, setFeedbacks] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [selectedAnalysis, setSelectedAnalysis] = useState(null);
+  const { user } = useAuth();
+  const [currentAnalysisIndex, setCurrentAnalysisIndex] = useState(0);
+  const [direction, setDirection] = useState('');
 
   useEffect(() => {
-    const fetchProjectAndAnalyses = async () => {
-      const docRef = doc(db, 'projects', projectId);
-      const docSnap = await getDoc(docRef);
-      if (docSnap.exists()) {
-        setProject({ id: docSnap.id, ...docSnap.data() });
-       
-        try {
-          const response = await axios.get('/api/analyses');
-          console.log('Analyses response:', response.data);
-          setAnalyses(response.data);
-        } catch (error) {
-          console.error('Error fetching analyses:', error);
+    const fetchProjectData = async () => {
+      try {
+        if (!user) {
+          setError('User not authenticated');
+          setLoading(false);
+          return;
         }
 
-        // Fetch feedbacks
-        const feedbacksRef = collection(db, 'projects', projectId, 'feedbacks');
-        const feedbacksSnap = await getDocs(feedbacksRef);
-        const feedbacksList = feedbacksSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        console.log('Fetched feedbacks:', feedbacksList);
-        setFeedbacks(feedbacksList);
+        const projectRef = doc(db, 'projects', projectId);
+        const projectSnap = await getDoc(projectRef);
+
+        if (projectSnap.exists()) {
+          const projectData = { id: projectSnap.id, ...projectSnap.data() };
+          setProject(projectData);
+
+          if (projectData.userId !== user.uid) {
+            setError('You do not have permission to view this project');
+            setLoading(false);
+            return;
+          }
+
+          // Fetch analyses
+          const analysesRef = collection(projectRef, 'analysis');
+          const analysesSnapshot = await getDocs(analysesRef);
+          const analysesData = analysesSnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+          }));
+          setAnalyses(analysesData);
+
+          // Fetch feedbacks
+          const feedbacksRef = collection(projectRef, 'feedback');
+          const feedbacksSnap = await getDocs(feedbacksRef);
+          const feedbacksList = feedbacksSnap.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+          }));
+          setFeedbacks(feedbacksList);
+
+        } else {
+          setError('Project not found');
+        }
+      } catch (err) {
+        console.error('Error fetching project data:', err);
+        setError('Failed to load project data: ' + err.message);
+      } finally {
+        setLoading(false);
       }
     };
-    fetchProjectAndAnalyses();
-  }, [projectId]);
 
-  const copyLink = () => {
-    const link = `${window.location.origin}/feedback/${projectId}`;
-    navigator.clipboard.writeText(link);
-    alert('Link copied to clipboard!');
+    fetchProjectData();
+  }, [projectId, user]);
+
+  const handleDeleteAnalysis = async (analysisId) => {
+    try {
+      await deleteDoc(doc(db, 'projects', projectId, 'analysis', analysisId));
+      setAnalyses(analyses.filter(analysis => analysis.id !== analysisId));
+    } catch (error) {
+      console.error('Error deleting analysis:', error);
+      setError('Failed to delete analysis');
+    }
   };
 
-  if (!project) return <div>Loading...</div>;
+  const handleTriggerAnalysis = async () => {
+    try {
+      const response = await axios.post(`/api/trigger-analysis/${projectId}`);
+      const newAnalysis = response.data;
+      setAnalyses([...analyses, newAnalysis]);
+    } catch (error) {
+      console.error('Error triggering analysis:', error);
+      setError('Failed to trigger analysis');
+    }
+  };
 
-  console.log('Feedbacks in render:', feedbacks);
+  const getFeedbackLink = () => {
+    return `${window.location.origin}/feedback/${projectId}`;
+  };
+
+  const copyFeedbackLink = () => {
+    navigator.clipboard.writeText(getFeedbackLink())
+      .then(() => alert('Feedback link copied to clipboard!'))
+      .catch(err => console.error('Failed to copy feedback link:', err));
+  };
+
+  const goToPreviousAnalysis = () => {
+    setDirection('right');
+    setCurrentAnalysisIndex((prevIndex) => 
+      prevIndex > 0 ? prevIndex - 1 : analyses.length - 1
+    );
+  };
+
+  const goToNextAnalysis = () => {
+    setDirection('left');
+    setCurrentAnalysisIndex((prevIndex) => 
+      prevIndex < analyses.length - 1 ? prevIndex + 1 : 0
+    );
+  };
+
+  if (loading) return <div className="text-center py-10">Loading...</div>;
+  if (error) return <div className="text-center py-10 text-red-600">Error: {error}</div>;
+  if (!project) return <div className="text-center py-10">Project not found</div>;
 
   return (
-    <div className="min-h-screen py-4 px-2 sm:py-6 sm:px-4 md:py-8 md:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto">
-        <h1 className="text-3xl sm:text-4xl font-semibold font-opensans mb-6 sm:mb-8 text-center text-purple-800">{project.name}</h1>
-        <div className="rounded-lg p-4 sm:p-6 mb-6 sm:mb-8">
-          <h2 className="text-xl sm:text-2xl font-semibold font-opensans mb-4 text-purple-700">Feedback Link</h2>
-          <div className="flex items-center">
-            <input
-              type="text"
-              value={`${window.location.origin}/feedback/${projectId}`}
-              readOnly
-              className="flex-grow px-2 sm:px-3 py-2 bg-white border border-purple-200 rounded-l-md text-purple-800 focus:outline-none focus:ring-2 focus:ring-purple-300 text-sm sm:text-base"
-            />
-            <button
-              onClick={copyLink}
-              className="px-3 sm:px-4 py-2 text-white bg-purple-600 rounded-r-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-300 transition duration-300 text-sm sm:text-base"
-            >
-              Copy
-            </button>
-          </div>
-        </div>
-        <div className="flex flex-col md:flex-row">
-          <div className="md:w-1/4 mb-6 md:mb-0 md:mr-6">
-            {feedbacks.length > 0 ? (
-              <FeedbackList feedbacks={feedbacks} projectId={projectId} />
-            ) : (
-              <p>No feedbacks available</p>
-            )}
-          </div>
-          <div className="md:w-3/4">
-            {Array.isArray(analyses) && analyses.length > 0 ? (
-              analyses.map((analysis, index) => (
-                <div key={analysis.id} className="px-0 sm:px-2 md:px-4 mb-8">
-                  <h3 className="text-2xl font-semibold mb-4">Analysis #{index + 1}</h3>
-                  <FeedbackAnalysis analysisData={analysis.results} projectId={projectId} />
-                </div>
-              ))
-            ) : (
-              <div className="text-center text-gray-600">No analysis data available yet.</div>
-            )}
-          </div>
+    <div className="container mx-auto p-4">
+      <h1 className="text-3xl font-bold mb-6">{project.name}</h1>
+      
+      <div className="mb-6">
+        <h2 className="text-xl font-semibold mb-2">Feedback Link</h2>
+        <div className="flex items-center">
+          <input 
+            type="text" 
+            value={getFeedbackLink()} 
+            readOnly 
+            className="flex-grow p-2 border rounded-l"
+          />
+          <button 
+            onClick={copyFeedbackLink}
+            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-r"
+          >
+            Copy Link
+          </button>
         </div>
       </div>
+
+      <button 
+        onClick={handleTriggerAnalysis}
+        className="mb-6 bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+      >
+        Trigger New Analysis
+      </button>
+
+      <div className="analyses-section">
+        <h2 className="text-2xl font-semibold mb-4">Analyses</h2>
+        {analyses.length === 0 ? (
+          <div className="text-center py-10 text-gray-600">No analyses available</div>
+        ) : (
+          <div>
+            <div className="flex justify-between mb-4">
+              <button onClick={goToPreviousAnalysis} className="text-2xl text-indigo-600 hover:text-indigo-800">
+                <FaChevronLeft />
+              </button>
+              <button onClick={goToNextAnalysis} className="text-2xl text-indigo-600 hover:text-indigo-800">
+                <FaChevronRight />
+              </button>
+            </div>
+            <div className="relative overflow-hidden">
+              <div 
+                key={currentAnalysisIndex}
+                className={`transition-transform duration-300 ease-in-out ${
+                  direction === 'left' ? 'slide-in-left' : direction === 'right' ? 'slide-in-right' : ''
+                }`}
+              >
+                <FeedbackAnalysis 
+                  analysisData={analyses[currentAnalysisIndex]} 
+                  projectId={projectId}
+                  onDelete={() => handleDeleteAnalysis(analyses[currentAnalysisIndex].id)}
+                  onViewFeedback={() => setSelectedAnalysis(analyses[currentAnalysisIndex])}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {selectedAnalysis && (
+        <div className="mt-6">
+          <h2 className="text-2xl font-semibold mb-4">Feedback for Analysis</h2>
+          <FeedbackList 
+            feedbacks={feedbacks.filter(f => selectedAnalysis.feedbackIds.includes(f.id))}
+            projectId={projectId}
+          />
+        </div>
+      )}
     </div>
   );
 }

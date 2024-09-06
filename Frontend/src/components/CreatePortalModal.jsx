@@ -1,17 +1,38 @@
 import React, { useState } from 'react';
 import { addDoc, collection } from 'firebase/firestore';
-import { db } from '../firebase';
+import { db, auth } from '../firebase'; // Ensure auth is imported from firebase
+import { useAuth } from '../context/AuthContext';
 
 function CreatePortalModal({ isOpen, onClose, onProjectCreated }) {
   const [projectName, setProjectName] = useState('');
+  const { isLoggedIn } = useAuth(); // Destructure isLoggedIn from context
+
+  // Function to get the current user's UID from Firebase Authentication
+  const getCurrentUserId = () => {
+    const user = auth.currentUser;
+    return user ? user.uid : null;
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!isLoggedIn) {
+      alert('You must be logged in to create a project.');
+      return;
+    }
+
+    const userId = getCurrentUserId();
+    if (!userId) {
+      alert('User is not authenticated.');
+      return;
+    }
+
     try {
       const docRef = await addDoc(collection(db, 'projects'), {
         name: projectName,
-        createdAt: new Date()
+        createdAt: new Date(),
+        userId // Include userId here
       });
+
       onProjectCreated(docRef.id);
       onClose();
     } catch (error) {

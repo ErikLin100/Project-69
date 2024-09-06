@@ -1,2 +1,0 @@
-My app idea were developing: A micro Saas, the user can create a Link that contains a feedback form. the form is simple, age, sex, rating 1- 5. that data is then analyzed with open ais GPT models. and we return a monthly analysis about the recieved feedback.including break down of the numbers, pos/neg/neutral percentages, key themes found, main point of dissatisfaction. those 
-open up  and the user can view the specific feedback. this would be like a digital mailbox.

@@ -1,21 +1,32 @@
 import React, { useState } from 'react';
-import { addDoc, collection } from 'firebase/firestore';
-import { db } from '../firebase';
+import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { db, auth } from '../firebase';
 
 function ProjectCreation() {
   const [projectName, setProjectName] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const user = auth.currentUser;
+    console.log('Logged-in user:', user); // Debug line
+
+    if (!user) {
+      console.error("No user is logged in.");
+      return;
+    }
+
     try {
       const docRef = await addDoc(collection(db, 'projects'), {
         name: projectName,
-        createdAt: new Date(),
+        createdAt: serverTimestamp(),
+        userId: user.uid // Ensure this field is being set
       });
+
       console.log("Project created with ID: ", docRef.id);
-      setProjectName('');
+      setProjectName(''); // Reset the form after successful creation
     } catch (error) {
-      console.error("Error adding project: ", error);
+      console.error("Error adding project: ", error.message);
     }
   };
 
@@ -40,6 +51,5 @@ function ProjectCreation() {
 }
 
 export default ProjectCreation;
-
 
 

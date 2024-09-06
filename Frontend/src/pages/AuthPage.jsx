@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
+import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { auth, db } from '../firebase';
 import { useAuth } from '../context/AuthContext';
-
 
 function AuthPage({ isOpen, onClose }) {
   const navigate = useNavigate();
@@ -24,13 +23,19 @@ function AuthPage({ isOpen, onClose }) {
       if (!userSnap.exists()) {
         await setDoc(userRef, {
           email: user.email,
-          analysisFrequency: 'weekly',
+          uid: user.uid,
+          analysisFrequency: 'monthly',
           feedbackThreshold: 50,
-          createdAt: new Date()
+          hasAccess: false,
+          createdAt: new Date(),
+          photoURL: user.photoURL
         });
+      } else {
+        // Update the existing user's photo URL
+        await setDoc(userRef, { photoURL: user.photoURL }, { merge: true });
       }
   
-      login();
+      login(user);
       onClose();
       navigate('/action');
     } catch (error) {

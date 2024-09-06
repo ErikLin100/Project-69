@@ -43,7 +43,7 @@ function HeroSection() {
             FeedbackWizard
           </span>
         </h2>
-        <Link to="/signup" className="bg-[#F5F6F8] font-semibold font-opensans text-purple-600 py-3 px-8 rounded-full text-lg hover:bg-gray-100 transition duration-300">
+        <Link to="/signup" className="bg-[#F8F8FF] font-semibold font-opensans text-purple-600 py-3 px-8 rounded-full text-lg hover:bg-gray-100 transition duration-300">
           Start Your Free Trial
         </Link>
       </div>

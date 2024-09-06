@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { FaSmile, FaMeh, FaFrown, FaTrash } from 'react-icons/fa';
+import { FaTrash } from 'react-icons/fa';
 import ExpandableThemeBox from './ExpandableThemeBox';
 import DissatisfactionBox from './DissatisfactionBox';
+import CompMentions from './CompMentions';
+import BugReport from './BugReport';
 
 function AnimatedSentimentMeter({ sentimentBreakdown, totalFeedback }) {
   const [animatedValues, setAnimatedValues] = useState({ positive: 0, negative: 0, neutral: 0 });
@@ -43,9 +45,6 @@ function AnimatedSentimentMeter({ sentimentBreakdown, totalFeedback }) {
                 style={{ width: getWidth(animatedValues[sentiment]) }}
               ></div>
             </div>
-            <span className="ml-2 text-xl font-semibold font-opensans w-16 text-right">
-              {Math.round(animatedValues[sentiment])}%
-            </span>
           </div>
         ))}
       </div>
@@ -54,7 +53,7 @@ function AnimatedSentimentMeter({ sentimentBreakdown, totalFeedback }) {
 }
 
 function FeedbackAnalysis({ analysisData, projectId, onDelete }) {
-  if (!analysisData) {
+  if (!analysisData || !analysisData.results) {
     return (
       <div className="feedback-analysis p-2 sm:p-4 md:p-6 rounded-lg shadow-lg w-full max-w-screen-xl mx-auto text-center">
         <h2 className="text-2xl font-bold text-indigo-800">No Analysis Available</h2>
@@ -63,10 +62,10 @@ function FeedbackAnalysis({ analysisData, projectId, onDelete }) {
     );
   }
 
-  const { totalFeedback, sentimentBreakdown, keyThemes, negativeThemes, competitorMentions, bugReports } = analysisData;
+  const { totalFeedback, sentimentBreakdown, keyThemes, negativeThemes, competitorMentions, bugReports } = analysisData.results;
 
   return (
-    <div className="feedback-analysis p-2 sm:p-4 md:p-6 rounded-lg shadow-lg w-full max-w-screen-xl mx-auto">
+    <div className="feedback-analysis p-2 sm:p-4 md:p-6 rounded-lg shadow-lg bg-white w-full max-w-screen-xl mx-auto">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-indigo-800">Feedback Analysis</h2>
         <div className="flex items-center">
@@ -78,49 +77,39 @@ function FeedbackAnalysis({ analysisData, projectId, onDelete }) {
         </div>
       </div>
      
-      <AnimatedSentimentMeter sentimentBreakdown={sentimentBreakdown} totalFeedback={totalFeedback} />
+      {sentimentBreakdown && <AnimatedSentimentMeter sentimentBreakdown={sentimentBreakdown} totalFeedback={totalFeedback} />}
 
-      <div className="mt-8">
-        <h3 className="text-xl font-semibold mb-4 text-indigo-700">Key Themes</h3>
-        <div className="space-y-4">
-          {keyThemes.map((theme, index) => (
-            <ExpandableThemeBox key={index} theme={theme} totalFeedback={totalFeedback} />
-          ))}
-        </div>
-      </div>
-
-      <div className="mt-6">
-        <h3 className="text-xl font-semibold mb-4 text-red-700">Main Points of Dissatisfaction</h3>
-        <div className="space-y-4">
-          {negativeThemes.map((theme, index) => (
-            <DissatisfactionBox key={index} theme={theme} totalFeedback={totalFeedback} />
-          ))}
-        </div>
-      </div>
-
-      {competitorMentions && competitorMentions.length > 0 && (
-        <div className="mt-6">
-          <h3 className="text-xl font-semibold mb-4 text-blue-700">Competitor Mentions</h3>
-          <ul className="list-disc pl-5">
-            {competitorMentions.map((mention, index) => (
-              <li key={index} className="mb-2">
-                {mention.competitor}: {mention.count} mentions
-              </li>
+      {keyThemes && keyThemes.length > 0 && (
+        <div className="mt-8">
+          <h3 className="text-xl font-semibold mb-4 text-indigo-700">Key Themes</h3>
+          <div className="space-y-4">
+            {keyThemes.map((theme, index) => (
+              <ExpandableThemeBox key={index} theme={theme} totalFeedback={totalFeedback} />
             ))}
-          </ul>
+          </div>
         </div>
       )}
 
-      {bugReports && bugReports.length > 0 && (
+      {negativeThemes && negativeThemes.length > 0 && (
         <div className="mt-6">
-          <h3 className="text-xl font-semibold mb-4 text-orange-700">Potential Bug Reports</h3>
-          <ul className="list-disc pl-5">
-            {bugReports.map((bug, index) => (
-              <li key={index} className="mb-2">
-                {bug.description}: {bug.count} reports
-              </li>
+          <h3 className="text-xl font-semibold mb-4 text-red-700">Main Points of Dissatisfaction</h3>
+          <div className="space-y-4">
+            {negativeThemes.map((theme, index) => (
+              <DissatisfactionBox key={index} theme={theme} totalFeedback={totalFeedback} />
             ))}
-          </ul>
+          </div>
+        </div>
+      )}
+      
+      {competitorMentions && competitorMentions.length > 0 && (
+        <div className='mt-6'>
+          <CompMentions mentions={competitorMentions} />
+        </div>
+      )}
+      
+      {bugReports && bugReports.length > 0 && (
+        <div className='mt-6'>
+          <BugReport bugs={bugReports} />
         </div>
       )}
     </div>
